@@ -35,30 +35,6 @@ pesos_tipos = {
     'feriado': [20, 30, 15, 20, 10, 5]
 }
 
-# Setores da Asa Sul com coordenadas reais
-setores_asa_sul = {
-    "SQS 105": (-15.7932, -47.8815),
-    "SQS 106": (-15.7912, -47.8830),
-    "SQS 107": (-15.7890, -47.8845),
-    "SQS 108": (-15.7868, -47.8860),
-    "SQS 109": (-15.7846, -47.8875),
-    "W3 Sul": (-15.7950, -47.8800),
-    "W4 Sul": (-15.7970, -47.8785),
-    "Eixo Rodoviário Sul": (-15.7900, -47.8850)
-}
-
-# Endereços típicos da Asa Sul
-enderecos_asa_sul = [
-    "{rua} Bloco {bloco}, Ap {num}",
-    "{rua} Lote {lote}, Sala {sala}",
-    "{rua} Edifício {edificio}, Unidade {unidade}"
-]
-blocos = ["A", "B", "C", "D"]
-lotes = list(range(1, 50))
-salas = list(range(100, 300))
-edificios = ["Alpha", "Bravo", "Delta", "Omega", "Prime", "Center"]
-unidades = list(range(101, 250))
-
 # Geração dos dados
 num_registros = 15000
 data = []
@@ -97,24 +73,15 @@ for _ in range(num_registros):
         idade = random.randint(7, 90)
 
     # Gerar coordenadas aleatórias na área destacada
-    lat = round(random.uniform(-15.827616, -15.796895), 6)  # Latitude
-    lon = round(random.uniform(-47.920751, -47.856961), 6)  # Longitude
+    lat = round(random.uniform(-15.8000, -15.7800), 6)  # Latitude
+    lon = round(random.uniform(-47.8900, -47.8700), 6)  # Longitude
 
     # Adicionar pequena variação para evitar pontos exatos repetidos
     lat += random.uniform(-0.0005, 0.0005)
     lon += random.uniform(-0.0005, 0.0005)
 
-    # Simular ruas aleatórias dentro da área
+    # Simular ruas aleatórias dentro da Asa Sul
     rua = f"SQS {random.randint(105, 109)}" if random.random() < 0.6 else f"W{random.choice(['3', '4'])} Sul"
-
-    # Gerar endereço personalizado da Asa Sul
-    formato = random.choice(enderecos_asa_sul)
-    if "{bloco}" in formato:
-        endereco = formato.format(rua=rua, bloco=random.choice(blocos), num=random.randint(100, 999))
-    elif "{lote}" in formato:
-        endereco = formato.format(rua=rua, lote=random.choice(lotes), sala=random.choice(salas))
-    elif "{edificio}" in formato:
-        endereco = formato.format(rua=rua, edificio=random.choice(edificios), unidade=random.choice(unidades))
 
     # Gerar email e telefone
     email = fake.email()
@@ -134,12 +101,11 @@ for _ in range(num_registros):
     if random.random() < 0.05:
         telefone = np.nan
 
-
     data.append({
         'latitude': lat,
         'longitude': lon,
         'data': data_str,
-        'hora': data_hora.strftime('%H:%M') if not isinstance(hora, float) else np.nan,
+        'hora': data_hora.strftime('%H:%M'),
         'tipo_crime': tipo,
         'bairro': 'Asa Sul',
         'rua': rua,
@@ -149,11 +115,19 @@ for _ in range(num_registros):
         'cpf': cpf_formatado,
         'idade': idade,
         'email': email,
-        'telefone': telefone,
-        'endereco': endereco
+        'telefone': telefone
     })
 
 # Criar DataFrame e salvar CSV
 df = pd.DataFrame(data)
-df.to_csv('crimes_asa_sul_2020_2025_com_pessoas_endereco.csv', index=False)
+
+# Garantir que coordenadas são numéricas
+df['latitude'] = pd.to_numeric(df['latitude'], errors='coerce')
+df['longitude'] = pd.to_numeric(df['longitude'], errors='coerce')
+
+# Remover linhas com coordenadas inválidas
+df = df.dropna(subset=['latitude', 'longitude'])
+
+# Salvar o CSV final
+df.to_csv('crimes_asa_sul_2020_2025_com_pessoas_endereco2.csv', index=False)
 print("✅ Arquivo 'crimes_asa_sul_2020_2025_com_pessoas_endereco.csv' criado com sucesso!")
