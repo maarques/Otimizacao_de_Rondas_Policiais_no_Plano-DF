@@ -6,14 +6,17 @@ from faker import Faker
 
 fake = Faker('pt_BR')
 
-# Função para gerar data/hora entre 2020 e 2025
+# Na função random_datetime()
 def random_datetime():
     start = datetime(2020, 1, 1)
     end = datetime(2025, 12, 31)
     delta_days = (end - start).days
+
+    # Distribuição normal com leve viés noturno (média 19h, desvio 5h)
+    hora = int(np.random.normal(loc=23, scale=7)) % 24  # Média 23h, desvio 5h
     return start + timedelta(
         days=random.randint(0, delta_days),
-        hours=random.randint(0, 23),
+        hours=hora,
         minutes=random.randint(0, 59)
     )
 
@@ -27,25 +30,12 @@ feriados = [
     "2025-04-18", "2025-04-20", "2025-04-21", "2025-05-01", "2025-09-07", "2025-10-12", "2025-11-02", "2025-11-15", "2025-12-25"
 ]
 
-# Tipos de crime com pesos ajustáveis
+# Tipos de crime com pesos mais equilibrados
 tipos_crime = ["furto", "roubo", "homicídio", "tráfico", "vandalismo", "feminicídio"]
 pesos_tipos = {
-    'dia_normal': [30, 20, 5, 15, 20, 5],
-    'final_semana': [25, 25, 10, 20, 15, 5],
-    'feriado': [20, 30, 15, 20, 10, 5]
-}
-
-# Setores da Asa Sul com coordenadas reais
-setores_asa_sul = {
-    "SQS 105": (-15.7932, -47.8815),
-    "SQS 106": (-15.7912, -47.8830),
-    "SQS 107": (-15.7890, -47.8845),
-    "SQS 108": (-15.7868, -47.8860),
-    "SQS 109": (-15.7846, -47.8875),
-    "CLS 401": (-15.7950, -47.8790),
-    "CLS 402": (-15.7970, -47.8775),
-    "CLS 403": (-15.7990, -47.8760),
-    "W3 Sul": (-15.7950, -47.8800)
+    'dia_normal': [30, 20, 10, 15, 20, 5],  # Distribuição mais equilibrada
+    'final_semana': [25, 20, 15, 20, 15, 5],
+    'feriado': [20, 15, 20, 25, 15, 5]
 }
 
 # Endereços típicos da Asa Sul
@@ -60,8 +50,52 @@ salas = list(range(100, 300))
 edificios = ["Alpha", "Bravo", "Delta", "Omega", "Prime", "Center"]
 unidades = list(range(101, 250))
 
+# Coordenadas dos setores da Asa Sul (com variação espacial)
+setores_asa_sul = {
+    "Eixo L Sul": [
+        (-15.8260, -47.9120),  # Centro do Eixo L Sul
+        (-15.8247, -47.9100),  # Próximo ao Clube do Exército
+        (-15.8285, -47.9140),  # Região da Praça dos Três Poderes
+        (-15.8220, -47.9080)   # Área comercial da Asa Sul
+    ],
+    "W3 Sul": [
+        (-15.817760, -47.913787),  # SQS 314
+        (-15.814581, -47.909281),  # SQS 212
+        (-15.811360, -47.904775),  # SQS 112
+        (-15.806983, -47.899453),  # SQS 108
+        (-15.800748, -47.893874),  # SQS 104
+        (-15.816951, -47.902616),  # Centro da W3 Sul
+        (-15.817344, -47.907337),  # Expansão leste
+        (-15.818286, -47.899531)   # Sul da W3 Sul
+    ],
+    "L2 Sul": [
+        (-15.8300, -47.9080),  # Centro da L2 Sul
+        (-15.8280, -47.9050),  # Próximo à CLS 208
+        (-15.8250, -47.9020),  # Região comercial
+        (-15.8220, -47.8990),  # Área residencial
+        (-15.821972, -47.920525),  # Centro-norte da L2 Sul
+        (-15.831757, -47.921340),  # Extremo norte da L2 Sul
+        (-15.824573, -47.925245)   # Nordeste da L2 Sul
+    ],
+    "Novo Setor 1": [  # Áreas com alta densidade
+        (-15.808346, -47.891342),  # Ponto central
+        (-15.8100, -47.8950),      # Sudoeste
+        (-15.8050, -47.8850),      # Sul
+        (-15.804471, -47.891790),  # Sudoeste
+        (-15.816681, -47.901966),  # Centro-oeste
+        (-15.809755, -47.884687),  # Sul do setor
+        (-15.815680, -47.901966)   # Leste do Novo Setor 1
+    ]
+}
+
+# Função para gerar variação espacial
+def gerar_variacao(lat_base, lon_base):
+    lat = lat_base + random.uniform(-0.007, 0.007)  # Variação de 700 metros
+    lon = lon_base + random.uniform(-0.007, 0.007)
+    return lat, lon
+
 # Geração dos dados
-num_registros = 15000
+num_registros = 30000
 data = []
 
 for _ in range(num_registros):
@@ -80,29 +114,30 @@ for _ in range(num_registros):
     # Peso de tipos de crime conforme o dia
     tipo = random.choices(tipos_crime, weights=pesos_tipos[tipo_dia], k=1)[0]
 
-    # Ajuste de horário: aumentar chance de crime entre 20h e 3h
-    if 20 <= hora or hora < 3:
+    # Ajuste de horário: aumentar chance de crime entre 21h e 3h
+    if 21 <= hora or hora <= 3:  # Agora focado nas 21h–3h
         if tipo in ['homicídio', 'tráfico']:
-            tipo = random.choice([tipo] * 3 + random.choices(tipos_crime, k=1))
+            tipo = random.choice([tipo] * 5 + random.choices(tipos_crime, weights=pesos_tipos[tipo_dia], k=2))  # Priorizar mais
 
     # Gerar nome completo e CPF com Faker
     nome = fake.name()
     cpf_formatado = fake.cpf()
 
     # Idade com maior incidência em 14–23 e 60–70
-    if random.random() < 0.7:
+    if random.random() < 0.5:
         idade = random.randint(14, 23)
     elif random.random() < 0.2:
         idade = random.randint(60, 70)
     else:
         idade = random.randint(7, 90)
 
-    # Escolher setor aleatório dentro da Asa Sul
-    rua, (lat_base, lon_base) = random.choice(list(setores_asa_sul.items()))
-    lat = lat_base + random.uniform(-0.003, 0.003)  # Aumentei a variação
-    lon = lon_base + random.uniform(-0.003, 0.003)
+    # Escolher setor aleatório na Asa Sul
+    via_aleatoria = random.choice(list(setores_asa_sul.keys()))
+    lat_base, lon_base = random.choice(setores_asa_sul[via_aleatoria])
+    lat, lon = gerar_variacao(lat_base, lon_base)
+    rua = via_aleatoria
 
-    # Gerar endereço personalizado da Asa Sul
+    # Gerar endereço personalizado
     formato = random.choice(enderecos_asa_sul)
     if "{bloco}" in formato:
         endereco = formato.format(rua=rua, bloco=random.choice(blocos), num=random.randint(100, 999))
@@ -115,20 +150,18 @@ for _ in range(num_registros):
     email = fake.email()
     telefone = fake.phone_number()
 
-    # Inserir NaN esporadicamente (~5% dos registros)
-    if random.random() < 0.05:
+    # Inserir NaN esporadicamente (Dependendo da coluna)
+    if random.random() < 0.03:
         nome = np.nan
-    if random.random() < 0.05:
+    if random.random() < 0.08:
         idade = np.nan
-    if random.random() < 0.05:
+    if random.random() < 0.01:
         tipo = np.nan
-    if random.random() < 0.05:
-        hora = np.nan
-    if random.random() < 0.05:
+    if random.random() < 0.2:
         email = np.nan
-    if random.random() < 0.05:
+    if random.random() < 0.07:
         telefone = np.nan
-    if random.random() < 0.05:
+    if random.random() < 0.09:
         endereco = np.nan
 
     data.append({
@@ -148,8 +181,9 @@ for _ in range(num_registros):
         'telefone': telefone,
         'endereco': endereco
     })
-
 # Criar DataFrame e salvar CSV
 df = pd.DataFrame(data)
-df.to_csv('crimes_asa_sul_2020_2025_com_pessoas_endereco.csv', index=False)
-print("✅ Arquivo 'crimes_asa_sul_2020_2025_com_pessoas_endereco.csv' criado com sucesso!")
+df["__ERR0O0__"] = "ERRO_404"#Coluna adicionada para ser tratada na Análise exploratória
+df["null"] = np.nan
+df.to_csv('crime_segunda_area.csv', index=False)
+print("✅ Arquivo 'crime_segunda_area.csv' criado com sucesso!")
