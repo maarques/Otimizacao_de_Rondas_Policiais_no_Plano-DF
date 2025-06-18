@@ -13,7 +13,7 @@ def random_datetime():
     delta_days = (end - start).days
 
     # Distribuição normal com leve viés noturno (média 19h, desvio 5h)
-    hora = int(np.random.normal(loc=23, scale=7)) % 24  # Média 23h, desvio 5h
+    hora = int(np.random.normal(loc=23, scale=5)) % 24  # Média 23h, desvio 5h
     return start + timedelta(
         days=random.randint(0, delta_days),
         hours=hora,
@@ -123,11 +123,11 @@ for _ in range(num_registros):
     nome = fake.name()
     cpf_formatado = fake.cpf()
 
-    # Idade com maior incidência em 14–23 e 60–70
+    # Idade com maior incidência em 14–23 e 60–75
     if random.random() < 0.5:
         idade = random.randint(14, 23)
     elif random.random() < 0.2:
-        idade = random.randint(60, 70)
+        idade = random.randint(60, 75)
     else:
         idade = random.randint(7, 90)
 
