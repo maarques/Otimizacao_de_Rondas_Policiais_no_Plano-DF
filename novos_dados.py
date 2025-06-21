@@ -17,32 +17,26 @@ zonas_proibidas = [
 crime_pesos_por_regiao = {
     "Eixo L Sul": [35, 25, 10, 15, 25, 10],  # Furto e Vandalismo pesam mais
     "W3 Sul": [20, 20, 15, 35, 10, 10],       # Tráfico e Homicídio pesam mais
-    "W4 Sul": [10, 15, 10, 20, 10, 45],        # Feminicídio pesa mais
-    "W5 Sul": [10, 15, 35, 30, 10, 10],        # Homicídio e Tráfico pesam mais
-    "L2 Sul": [10, 10, 30, 20, 10, 40],        # Homicídio e Feminicídio pesam mais
+    "W5 Sul": [10, 15, 35, 30, 10, 10],      # Homicídio e Tráfico pesam mais
+    "L2 Sul": [10, 10, 30, 20, 10, 40],      # Homicídio e Feminicídio pesam mais
     "Novo Setor 1": [10, 30, 10, 10, 30, 10]  # Roubo e Vandalismo pesam mais
 }
 
-# Função para gerar data/hora com viés noturno
-def random_datetime():
-    start = datetime(2020, 1, 1)
-    end = datetime(2025, 12, 31)
-    delta_days = (end - start).days
+# Definir padrões por região
+padroes_por_regiao = {
+    "W3 Sul": {"idade_min": 14, "idade_max": 25, "crimes_prioritarios": ["tráfico", "homicídio"]},
+    "W5 Sul": {"idade_min": 14, "idade_max": 30, "crimes_prioritarios": ["tráfico", "roubo"]},
+    "Eixo L Sul": {"idade_min": 50, "idade_max": 70, "crimes_prioritarios": ["furto", "vandalismo"]},
+    "L2 Sul": {"idade_min": 20, "idade_max": 40, "crimes_prioritarios": ["homicídio", "roubo"]},
+    "Novo Setor 1": {"idade_min": 14, "idade_max": 25, "crimes_prioritarios": ["roubo", "vandalismo"]}
+}
 
-    # Distribuição normal com viés noturno (média 23h, desvio 5h)
-    hora = int(np.random.normal(loc=23, scale=5)) % 24
-    return start + timedelta(
-        days=random.randint(0, delta_days),
-        hours=hora,
-        minutes=random.randint(0, 59)
-    )
-
-# Feriados fictícios (exemplo dos anos de 2020 a 2025 em Brasília)
+# Feriados fictícios
 feriados = [
     "2020-04-10", "2020-04-12", "2020-04-21", "2020-05-01", "2020-09-07", "2020-10-12", "2020-11-02", "2020-11-15", "2020-12-25",
     "2021-04-02", "2021-04-04", "2021-04-21", "2021-05-01", "2021-09-07", "2021-10-12", "2021-11-02", "2021-11-15", "2021-12-25",
     "2022-04-15", "2022-04-17", "2022-04-21", "2022-05-01", "2022-09-07", "2022-10-12", "2022-11-02", "2022-11-15", "2022-12-25",
-    "2023-04-07", "203-04-09", "2023-04-21", "2023-05-01", "2023-09-07", "2023-10-12", "2023-11-02", "2023-11-15", "2023-12-25",
+    "2023-04-07", "2023-04-09", "2023-04-21", "2023-05-01", "2023-09-07", "2023-10-12", "2023-11-02", "2023-11-15", "203-12-25",
     "2024-03-29", "2024-03-31", "2024-04-21", "2024-05-01", "2024-09-07", "2024-10-12", "2024-11-02", "2024-11-15", "2024-12-25",
     "2025-04-18", "2025-04-20", "2025-04-21", "2025-05-01", "2025-09-07", "2025-10-12", "2025-11-02", "2025-11-15", "2025-12-25"
 ]
@@ -80,7 +74,9 @@ setores_asa_sul = {
         (-15.8220, -47.8990),  # Área residencial
         (-15.821972, -47.920525),  # Centro-norte da L2 Sul
         (-15.831757, -47.921340),  # Extremo norte da L2 Sul
-        (-15.824573, -47.925245)   # Nordeste da L2 Sul
+        (-15.824573, -47.925245),   # Nordeste da L2 Sul
+        (-15.817510, -47.892228),
+        (-15.820010, -47.888692)
     ],
     "Novo Setor 1": [  # Áreas com alta densidade
         (-15.808346, -47.891342),  # Ponto central
@@ -89,8 +85,18 @@ setores_asa_sul = {
         (-15.804471, -47.891790),  # Sudoeste
         (-15.816681, -47.901966),  # Centro-oeste
         (-15.809755, -47.884687),  # Sul do setor
-        (-15.815680, -47.901966)   # Leste do Novo Setor 1
+        (-15.815680, -47.901966),  # Leste do Novo Setor 1
+        (-15.826569, -47.926808)
     ]
+}
+
+# Adicionar risco por região
+risco_mapa = {
+    "W3 Sul": 4,
+    "W5 Sul": 4,
+    "Eixo L Sul": 2,
+    "L2 Sul": 5,
+    "Novo Setor 1": 3
 }
 
 # Endereços típicos da Asa Sul
@@ -105,11 +111,37 @@ salas = list(range(100, 300))
 edificios = ["Alpha", "Bravo", "Delta", "Omega", "Prime", "Center"]
 unidades = list(range(101, 250))
 
-# Função para gerar variação espacial
+# Função para data/hora noturna
+def random_datetime():
+    start = datetime(2020, 1, 1)
+    end = datetime(2025, 12, 31)
+    delta_days = (end - start).days
+    hora = int(np.random.normal(loc=23, scale=5)) % 24
+    return start + timedelta(
+        days=random.randint(0, delta_days),
+        hours=hora,
+        minutes=random.randint(0, 59)
+    )
+
+# Função para gerar variação espacial menor (200m)
 def gerar_variacao(lat_base, lon_base):
-    lat = lat_base + random.uniform(-0.007, 0.007)  # Variação de 700m
-    lon = lon_base + random.uniform(-0.007, 0.007)
+    lat = lat_base + random.uniform(-0.005, 0.005)  # Menor dispersão
+    lon = lon_base + random.uniform(-0.005, 0.005)
     return lat, lon
+
+# Função para gerar idade com base na região e tipo de crime
+def gerar_idade(rua, tipo_crime):
+    padrao = padroes_por_regiao.get(rua, {"idade_min": 14, "idade_max": 70})
+    if tipo_crime in padrao.get("crimes_prioritarios", []):
+        idade = random.randint(padrao["idade_min"], padrao["idade_max"])
+    else:
+        if random.random() < 0.4:
+            idade = int(np.random.normal(loc=20, scale=5))  # Jovens
+        elif random.random() < 0.2:
+            idade = int(np.random.normal(loc=65, scale=5))  # Idosos
+        else:
+            idade = random.randint(7, 90)  # Aleatório
+    return min(max(idade, 7), 90)
 
 # Geração dos dados
 num_registros = 30000
@@ -128,52 +160,61 @@ for _ in range(num_registros):
     else:
         tipo_dia = 'dia_normal'
 
-    # Escolher região aleatória e base de coordenadas
-    via_aleatoria = random.choice(list(setores_asa_sul.keys()))
+    # Escolher tipo de crime com base no tipo de dia
+    base_pesos = pesos_tipos[tipo_dia]
+    tipo = random.choices(tipos_crime, weights=base_pesos, k=1)[0]
+
+    # Priorizar região com base no tipo de crime
+    if tipo == 'tráfico':
+        regioes_prioritarias = ['W3 Sul'] * 5 + list(setores_asa_sul.keys())
+    elif tipo == 'feminicídio':
+        regioes_prioritarias = ['L2 Sul'] * 5 + list(setores_asa_sul.keys())
+    elif tipo == 'homicídio':
+        regioes_prioritarias = ['W3 Sul', 'L2 Sul'] * 3 + list(setores_asa_sul.keys())
+    elif tipo == 'roubo':
+        regioes_prioritarias = ['Novo Setor 1'] * 5 + list(setores_asa_sul.keys())
+    elif tipo in ['furto', 'vandalismo']:
+        regioes_prioritarias = ['Eixo L Sul'] * 5 + list(setores_asa_sul.keys())
+    else:
+        regioes_prioritarias = list(setores_asa_sul.keys())
+
+    via_aleatoria = random.choice(regioes_prioritarias)
     lat_base, lon_base = random.choice(setores_asa_sul[via_aleatoria])
     lat, lon = gerar_variacao(lat_base, lon_base)
     rua = via_aleatoria
 
-    # Obter peso baseado no tipo de dia
-    base_pesos = pesos_tipos[tipo_dia]
-
-    # Obter peso da região (ou padrão se não estiver no dicionário)
-    regiao_pesos = crime_pesos_por_regiao.get(rua, [1, 1, 1, 1, 1, 1])  # Peso neutro se região não estiver no dicionário
-
-    # Combinar pesos (multiplicando para aumentar impacto)
-    combined_pesos = [base * regiao for base, regiao in zip(base_pesos, regiao_pesos)]
-
-    # Escolher tipo de crime com base nos pesos combinados
+    # Obter peso da região
+    regiao_pesos = crime_pesos_por_regiao.get(rua, [1] * 6)
+    combined_pesos = [b * r for b, r in zip(base_pesos, regiao_pesos)]
+    
+    # Reforçar tipo de crime com base na região
     tipo = random.choices(tipos_crime, weights=combined_pesos, k=1)[0]
 
     # Ajuste de horário: aumentar chance de crime entre 21h e 3h
     if 21 <= hora or hora <= 3:
-        if tipo in ['homicídio', 'tráfico']:
-            tipo = random.choice([tipo] * 5 + random.choices(tipos_crime, weights=combined_pesos, k=2))  # Priorizar mais à noite
+        padrao = padroes_por_regiao.get(rua, {})
+        if tipo in padrao.get("crimes_prioritarios", []):
+            tipo = random.choice([tipo] * 5 + random.choices(tipos_crime, weights=combined_pesos, k=2))
 
-    # Gerar nome completo e CPF com Faker
-    nome = fake.name()
-    cpf_formatado = fake.cpf()
+    # Gerar idade
+    idade = gerar_idade(rua, tipo)
 
-    def gerar_idade():
-        if random.random() < 0.2:  # 20% das idades em 14–23
-            idade = int(np.random.normal(loc=23, scale=4))  # Média 19, desvio 2 anos
-        elif random.random() < 0.2:  # 20% das idades em 60–70
-            idade = int(np.random.normal(loc=65, scale=10))  # Média 65, desvio 2 anos
-        else:  # 10% das idades espalhadas aleatoriamente (7–90)
-            idade = random.randint(7, 90)
-        
-        # Garantir que a idade esteja no intervalo válido
-        return min(max(idade, 7), 90)
-    # Gerar idade com distribuição natural
-    idade = gerar_idade()
-    # Verificar se está em zonas proibidas
-    for (lat_proibida, lon_proibida, raio) in zonas_proibidas:
-        distancia = ((lat - lat_proibida)**2 + (lon - lon_proibida)**2)**0.5
-        if distancia < raio:
-            continue  # Ignorar pontos nas zonas proibidas
+    # Verificar zonas proibidas
+    tentativas = 0
+    while tentativas < 10:
+        tentativas += 1
+        lat_base, lon_base = random.choice(setores_asa_sul[via_aleatoria])
+        lat, lon = gerar_variacao(lat_base, lon_base)
+        proibido = False
+        for (lat_p, lon_p, raio) in zonas_proibidas:
+            distancia = ((lat - lat_p)**2 + (lon - lon_p)**2)**0.5
+            if distancia < raio:
+                proibido = True
+                break
+        if not proibido:
+            break
 
-    # Gerar endereço personalizado
+    # Gerar endereço
     formato = random.choice(enderecos_asa_sul)
     if "{bloco}" in formato:
         endereco = formato.format(rua=rua, bloco=random.choice(blocos), num=random.randint(100, 999))
@@ -182,11 +223,13 @@ for _ in range(num_registros):
     elif "{edificio}" in formato:
         endereco = formato.format(rua=rua, edificio=random.choice(edificios), unidade=random.choice(unidades))
 
-    # Gerar email e telefone
+    # Gerar outros dados
+    nome = fake.name()
+    cpf_formatado = fake.cpf()
     email = fake.email()
     telefone = fake.phone_number()
 
-    # Inserir NaN esporadicamente (~5% dos registros)
+    # Inserir NaN esporadicamente
     if random.random() < 0.03:
         nome = np.nan
     if random.random() < 0.08:
@@ -200,11 +243,13 @@ for _ in range(num_registros):
     if random.random() < 0.09:
         endereco = np.nan
 
+    risco = risco_mapa.get(rua, 2)
+
     data.append({
         'latitude': lat,
         'longitude': lon,
         'data': data_str,
-        'hora': data_hora.strftime('%H:%M') if not isinstance(hora, float) else np.nan,
+        'hora': data_hora.strftime('%H:%M'),
         'tipo_crime': tipo,
         'bairro': 'Asa Sul',
         'rua': rua,
@@ -215,12 +260,13 @@ for _ in range(num_registros):
         'idade': idade,
         'email': email,
         'telefone': telefone,
-        'endereco': endereco
+        'endereco': endereco,
+        'risco': risco
     })
 
 # Criar DataFrame e salvar CSV
 df = pd.DataFrame(data)
-df["__ERRO__"] = "ERRO_404"  # Coluna com erro para análise
+df["__ERRO__"] = "ERRO_404"
 df["null"] = np.nan
 df.to_csv('crime_segunda_area.csv', index=False)
 print("✅ Arquivo 'crime_segunda_area.csv' criado com sucesso!")
