@@ -1,4 +1,3 @@
-
 # Otimização de Rondas: Uma Abordagem Preditiva para Segurança Urbana
 
 ## A Problemática: A Ineficiência das Rondas Tradicionais
@@ -21,17 +20,40 @@ Para isso, é necessário superar os seguintes obstáculos:
 2.  **Construir um Modelo Preditivo**: Desenvolver um modelo de machine learning robusto, capaz de prever as coordenadas geográficas de futuros incidentes com base nas variáveis mais influentes.
 3.  **Tornar a Análise Acessível**: Criar uma ferramenta que traduza os resultados complexos da análise de dados em insights visuais e acionáveis, permitindo que gestores de segurança tomem decisões mais rápidas e informadas.
 
+-----
+
+### **Um Desafio Adicional: A Sensibilidade dos Dados Criminais**
+
+Um dos maiores obstáculos em projetos de análise de criminalidade é o acesso a dados reais. Informações sobre crimes são extremamente sensíveis e protegidas por leis de privacidade rigorosas. A utilização de dados reais de ocorrências, que incluem informações pessoais das vítimas, endereços exatos e detalhes de investigações, é eticamente e legalmente inviável para projetos públicos.
+
+**O Dilema dos Dados Sintéticos "Aleatórios"**
+
+A alternativa é a criação de dados sintéticos. No entanto, gerar dados puramente aleatórios (por exemplo, coordenadas e horários sem critério) resultaria em um conjunto de informações sem padrões, sem correlações e, consequentemente, inútil para treinar um modelo preditivo. Um modelo treinado com dados aleatórios não aprenderia nenhuma relação real entre as variáveis e teria um desempenho pífio.
+
+**Nossa Abordagem: Geração de Dados Sintéticos Baseada em Regras**
+
+Para superar esse desafio, este projeto não utiliza dados aleatórios, mas sim **dados sintéticos gerados proceduralmente com base em regras e padrões realistas**. Os scripts `dados_asa_sul.py` e `Dados Fake.py` foram desenvolvidos para simular a complexidade do mundo real, incorporando lógicas como:
+
+  * **Pesos por Região**: Certos tipos de crimes, como "tráfico" e "roubo", foram programados para ocorrer com maior frequência em regiões específicas (ex: "W3 Sul"), enquanto crimes como "furto" são mais comuns em outras ("Eixo L Sul").
+  * **Padrões Demográficos**: A idade das vítimas sintéticas foi gerada com base em perfis associados a certos crimes. Por exemplo, vítimas de "tráfico" tendem a ser mais jovens (14-25 anos), enquanto vítimas de "furto" no "Eixo L Sul" são mais velhas (50-70 anos).
+  * **Influência Temporal**: A probabilidade de crimes varia conforme o dia da semana e feriados. Crimes mais graves, como homicídio, têm maior peso durante a noite e em feriados.
+  * **Zonas de Exclusão**: Foram definidas "zonas proibidas", como parques e lagos, para evitar a geração de ocorrências em locais improváveis.
+
+Dessa forma, o desafio não foi apenas correlacionar dados, mas primeiro **criar um ecossistema de dados sintéticos que possuísse correlações realistas para serem descobertas**. Isso torna o problema muito mais interessante e o desempenho dos modelos (como a acurácia de 63% do XGBoost) uma validação da qualidade dos dados gerados.
+
+-----
+
 ## A Solução: Análise de Dados para Rondas Otimizadas
 
-Este projeto enfrenta o desafio proposto através de uma solução completa de análise de dados e machine learning. Utilizando um dataset de ocorrências criminais na Asa Sul (Brasília), aplicamos técnicas de ciência de dados para construir um sistema que otimiza as rotas de patrulhamento.
+Este projeto enfrenta o desafio proposto através de uma solução completa de análise de dados e machine learning. Utilizando o dataset sintético de ocorrências criminais na Asa Sul, aplicamos técnicas de ciência de dados para construir um sistema que otimiza as rotas de patrulhamento.
 
 ### Funcionalidades Principais
 
-  * **Análise Exploratória (EDA)**: Uma profunda investigação dos dados para descobrir as "zonas quentes" (hotspots), os horários de maior risco para crimes específicos (como tráfico e homicídios entre 21h e 23h) e os perfis demográficos mais afetados.
+  * **Análise Exploratória (EDA)**: Uma profunda investigação dos dados para descobrir os "hotspots", os horários de maior risco para crimes específicos e os perfis demográficos mais afetados.
   * **Pré-processamento de Dados**: Técnicas de limpeza, tratamento de valores ausentes e engenharia de features para preparar os dados para os modelos preditivos.
-  * **Modelagem Preditiva**: Implementação de modelos de regressão de alta performance (Random Forest e XGBoost) para prever a latitude e longitude de futuros crimes com base em fatores como horário, tipo de crime e nível de risco da região.
-  * **Visualização Geográfica Interativa**: Utilização de mapas de calor e clusters (Folium) para visualizar a densidade criminal por região e horário, tornando os padrões facilmente identificáveis.
-  * **Dashboard Interativo (Streamlit)**: Uma interface web amigável que permite a qualquer usuário explorar os dados, filtrar por tipo de crime ou horário, e visualizar os insights da análise sem precisar de conhecimento técnico em programação.
+  * **Modelagem Preditiva**: Implementação de modelos de regressão de alta performance (Random Forest e XGBoost) para prever a latitude e longitude de futuros crimes.
+  * **Visualização Geográfica Interativa**: Utilização de mapas de calor e clusters (Folium) para visualizar a densidade criminal.
+  * **Dashboard Interativo (Streamlit)**: Uma interface web amigável que permite a qualquer usuário explorar os dados e os insights da análise.
 
 ## Como Começar
 
