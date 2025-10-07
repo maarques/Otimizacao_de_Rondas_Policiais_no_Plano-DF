@@ -1,7 +1,3 @@
-Com certeza! O projeto de Otimização de Rondas Policiais no Plano-DF é fascinante por sua abordagem preditiva e pela estratégia de dados sintéticos baseados em regras.
-
-Aqui está um novo arquivo README.md estilizado e refinado, pronto para ser copiado e colado no repositório do GitHub. Ele utiliza as boas práticas de formatação (títulos, listas, blocos de código e a simulação de badges) para uma apresentação mais profissional e atraente.
-
 🚨 Otimização de Rondas: Abordagem Preditiva para Segurança Urbana
 📍 Localização e Foco
 Plano Piloto, Asa Sul (DF) | Status: ✅ Em Desenvolvimento
